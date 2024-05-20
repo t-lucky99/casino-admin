@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Poppins, Noto_Sans } from "next/font/google";
 import "./globals.css";
+import { Header } from "@/components/page-header";
+import { MainNav } from "@/components/main-nav";
 
 const font = Poppins({
   subsets: ['latin'],
@@ -19,7 +21,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={font.className}>{children}</body>
+      <body className={font.className}>
+        <Header />
+        {/* <div>
+         {children}
+        </div> */}
+        
+        <div className="container mx-auto md:flex">
+        <MainNav />
+        <div>
+          {children}
+        </div>
+      </div>
+
+      </body>
     </html>
   );
 }

@@ -1,19 +1,19 @@
-import { RocketIcon, TargetIcon, LightningBoltIcon } from "@radix-ui/react-icons";
+import { FaDice, FaListUl, FaGamepad } from "react-icons/fa";
 import Link from "next/link";
 
 export const MainNav = () => {
     return (
-        <div className="w-[230px] py-10">
+        <div id="mainNav" className="w-[230px] py-10 transition-all">
             <div className="nav-menu-link">
-                <RocketIcon className="" />
+                <FaDice size={32}/>
                 <Link href="/games" className="w-full">Games</Link>
             </div>
             <div className="nav-menu-link">
-                <TargetIcon />
+                <FaListUl size={22}/>
                 <Link href="/games-types" className="w-full">Game Types</Link>
             </div>
             <div className="nav-menu-link">
-                <LightningBoltIcon />
+                <FaGamepad size={30}/>
                 <Link href="/games-types" className="w-full">Providers</Link>
             </div>
         </div>

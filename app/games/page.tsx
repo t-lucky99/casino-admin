@@ -1,13 +1,25 @@
-import { Header } from "@/components/page-header";
 import { MainNav } from "@/components/main-nav";
+import {GamesForm} from "@/components/games/games-form"
 
 const GamesPage = () => {
   return (
     <>
-      <Header />
-      <div className="container mx-auto md:flex">
+      {/* <div className="container mx-auto md:flex">
         <MainNav />
-        <div>content</div>
+        <div>
+          <div>
+            <p>set form search here</p>
+            <GamesForm />
+          </div>
+          <div>set list table here</div>
+        </div>
+      </div> */}
+      <div>
+        <div>
+          <p>set form search here</p>
+          <GamesForm />
+        </div>
+        <div>set list table here</div>
       </div>
     </>
     
