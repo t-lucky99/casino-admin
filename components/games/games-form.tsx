@@ -4,6 +4,9 @@ import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { GameSchema } from "@/schemas";
 import {useForm} from "react-hook-form";
+import { useState } from "react";
+import { useImgStore } from "@/store/zustand";
+
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,6 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import ImageUpload from "@/components/image-upload";
 
 import {
     Form,
@@ -35,6 +39,22 @@ import {
 } from "@/components/ui/select"
 
 export function GamesForm() {
+  //const [image, setImage] = useState('');
+  const {imageFile, updateImageFile} = useImgStore();
+
+//   const handleUploadedImage = (imageFile: string) => {
+//     //setImage(imageFile)
+//     // updateImageFile(imageFile)
+
+//     // setTimeout(() => {
+//     //     console.log("aaa::", imageFile)
+//     // }, 2000)
+
+//   };
+
+
+
+  
   const form = useForm<z.infer<typeof GameSchema>>({
     resolver: zodResolver(GameSchema),
     defaultValues: {
@@ -54,7 +74,6 @@ export function GamesForm() {
     console.log(values)
   }
 
-
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -66,11 +85,18 @@ export function GamesForm() {
         </DialogHeader>
 
         <Form {...form}>
+            <ImageUpload />
             <form 
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-6"
             >
                 <div className="space-y-4">
+                    <FormField 
+                        name="image"
+                        render={() => (
+                            <Input type="hidden" value={imageFile} />
+                        )}
+                    />
                     <FormField 
                         control={form.control}
                         name="name"
@@ -88,7 +114,7 @@ export function GamesForm() {
                         )}
                     />
 
-                    <FormField 
+                    {/* <FormField 
                         control={form.control}
                         name="image"
                         render={({field}) => (
@@ -104,34 +130,62 @@ export function GamesForm() {
                                 </FormControl>
                             </FormItem>
                         )}
-                    />
+                    /> */}
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField 
+                            control={form.control}
+                            name="typeId"
+                            render={({field}) => (
+                                <FormItem>
+                                    <FormLabel>Type</FormLabel>
+                                    <FormControl>
+                                        <Select>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="Select game type" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                <SelectItem value="1">Slot</SelectItem>
+                                                <SelectItem value="2">Poker</SelectItem>
+                                                <SelectItem value="3">Roulette</SelectItem>
+                                                <SelectItem value="4">Blackjack</SelectItem>
+                                                <SelectItem value="5">Baccarat</SelectItem>
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
 
-                    <FormField 
-                        control={form.control}
-                        name="typeId"
-                        render={({field}) => (
-                            <FormItem>
-                                <FormLabel>Type</FormLabel>
-                                <FormControl>
-                                    <Select>
-                                        <SelectTrigger className="w-[180px]">
-                                            <SelectValue placeholder="Select a fruit" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                            <SelectLabel>Fruits</SelectLabel>
-                                            <SelectItem value="apple">Apple</SelectItem>
-                                            <SelectItem value="banana">Banana</SelectItem>
-                                            <SelectItem value="blueberry">Blueberry</SelectItem>
-                                            <SelectItem value="grapes">Grapes</SelectItem>
-                                            <SelectItem value="pineapple">Pineapple</SelectItem>
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                                </FormControl>
-                            </FormItem>
-                        )}
-                    />
+
+                        <FormField 
+                            control={form.control}
+                            name="providerId"
+                            render={({field}) => (
+                                <FormItem>
+                                    <FormLabel>Provider</FormLabel>
+                                    <FormControl>
+                                        <Select>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="Select provider" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                <SelectItem value="1">Pragmatic Play</SelectItem>
+                                                <SelectItem value="2">Evo Play</SelectItem>
+                                                <SelectItem value="3">Play N Go</SelectItem>
+                                                <SelectItem value="4">Golden Hero</SelectItem>
+                                                <SelectItem value="5">Playson</SelectItem>
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                    </div>
                 </div>
 
                 <DialogFooter>
