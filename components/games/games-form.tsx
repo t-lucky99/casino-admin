@@ -1,13 +1,13 @@
 "use client"
 
 import * as z from "zod";
-import { zodResolver } from "@hookform/resolvers/zod"
+import { zodResolver } from "@hookform/resolvers/zod";
 import { GameSchema } from "@/schemas";
 import {useForm} from "react-hook-form";
-import { useState } from "react";
+import { SetStateAction, useState } from "react";
 import { useImgStore } from "@/store/zustand";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -15,9 +15,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import ImageUpload from "@/components/image-upload";
 
 import {
@@ -27,7 +27,7 @@ import {
     FormItem,
     FormLabel,
     FormMessage
-} from "@/components/ui/form"
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -36,32 +36,36 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
+
+import { DatePickerDemo } from "@/components/custom/date-picker";
+import { FaShieldAlt } from "react-icons/fa";
 
 export function GamesForm() {
-  //const [image, setImage] = useState('');
-  const {imageFile, updateImageFile} = useImgStore();
+  const TypeIdSchema = GameSchema.pick({
+    typeId: true,
+  });
+  const ReleaseDateSchema = GameSchema.pick({
+    releaseDate: true,
+  });
+  const [typeId, setTypeId] = useState('');
+  const [error, setError] = useState(''); 
 
-//   const handleUploadedImage = (imageFile: string) => {
-//     //setImage(imageFile)
-//     // updateImageFile(imageFile)
+  const [releaseDate, setReleaseDate] = useState<Date>();
+  const [errorRelDate, setErrorRelDate] = useState('');
 
-//     // setTimeout(() => {
-//     //     console.log("aaa::", imageFile)
-//     // }, 2000)
-
-//   };
-
-
-
+  const handleDateChange = (releaseDate: Date) => {
+    setReleaseDate(releaseDate);
+    console.log("releaseDate::: ",releaseDate)
+  };
   
   const form = useForm<z.infer<typeof GameSchema>>({
     resolver: zodResolver(GameSchema),
     defaultValues: {
         name: "",
         image: "",
-        typeId: 1,
-        providerId: 1,
+        typeId: "1",
+        providerId: "1",
         releaseDate: new Date(),
         createDate: new Date(),
         updateDate: new Date()
@@ -72,7 +76,38 @@ export function GamesForm() {
   const onSubmit = (values: z.infer<typeof GameSchema>) => {
     console.log("test")
     console.log(values)
+
+    validateTypeId(typeId);
+
+    
+    const validationResult = ReleaseDateSchema.safeParse({ releaseDate });
+    if (!validationResult.success) {
+        setErrorRelDate(validationResult.error.issues[0].message);
+    } else {
+        setErrorRelDate('');
+    }   
   }
+
+  const handleChangeTypeId = (value: string) => {
+
+    setTypeId(value);
+    console.log("value:::", value)
+
+    // Validate the selected option
+    validateTypeId(value);
+
+  };
+
+  const validateTypeId = (id: string) => {
+    const validationResult = TypeIdSchema.safeParse({ typeId: id });
+
+    if (!validationResult.success) {
+        setError(validationResult.error.issues[0].message);
+    } else {
+        setError('');
+    }    
+  };
+
 
   return (
     <Dialog>
@@ -85,18 +120,12 @@ export function GamesForm() {
         </DialogHeader>
 
         <Form {...form}>
-            <ImageUpload />
+            {/* <ImageUpload /> */}
             <form 
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-6"
             >
                 <div className="space-y-4">
-                    <FormField 
-                        name="image"
-                        render={() => (
-                            <Input type="hidden" value={imageFile} />
-                        )}
-                    />
                     <FormField 
                         control={form.control}
                         name="name"
@@ -113,25 +142,7 @@ export function GamesForm() {
                             </FormItem>
                         )}
                     />
-
-                    {/* <FormField 
-                        control={form.control}
-                        name="image"
-                        render={({field}) => (
-                            <FormItem>
-                                <FormLabel htmlFor="picture">Image</FormLabel>
-                                <FormControl>
-                                    <Input 
-                                        {...field}
-                                        id="picture"
-                                        type="file"
-                                        accept=".jpg,.png,.jpeg"
-                                    />
-                                </FormControl>
-                            </FormItem>
-                        )}
-                    /> */}
-                    
+                   
                     <div className="grid grid-cols-2 gap-4">
                         <FormField 
                             control={form.control}
@@ -140,7 +151,7 @@ export function GamesForm() {
                                 <FormItem>
                                     <FormLabel>Type</FormLabel>
                                     <FormControl>
-                                        <Select>
+                                        <Select value={typeId} onValueChange={handleChangeTypeId}>
                                             <SelectTrigger className="w-[180px]">
                                                 <SelectValue placeholder="Select game type" />
                                             </SelectTrigger>
@@ -155,6 +166,8 @@ export function GamesForm() {
                                             </SelectContent>
                                         </Select>
                                     </FormControl>
+                                    {error && <p style={{ color: 'red' }}>{error}</p>}
+                                    <FormMessage />
                                 </FormItem>
                             )}
                         />
@@ -186,6 +199,20 @@ export function GamesForm() {
                             )}
                         />
                     </div>
+
+                    <FormField 
+                        control={form.control}
+                        name="releaseDate"
+                        render={({field}) => (
+                            <FormItem>
+                                <FormLabel>Date of Release</FormLabel>
+                                <FormControl>
+					                <DatePickerDemo handleDateChange={handleDateChange} />
+                                </FormControl>
+                                {error && <p style={{ color: 'red' }}>{errorRelDate}</p>}                                    
+                            </FormItem>
+                        )}
+                    />
                 </div>
 
                 <DialogFooter>

@@ -5,8 +5,8 @@ export const GameSchema = z.object({
         message: "Minimum of 6 characters"
     }),
     image: z.string(),
-    typeId: z.number(),
-    providerId: z.number(),
+    typeId: z.string().min(1, 'Required field'),
+    providerId: z.string().min(1, 'Required field'),
     releaseDate: z.date(),
     createDate: z.date(),
     updateDate: z.date()

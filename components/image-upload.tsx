@@ -13,9 +13,7 @@ const ImageUpload = () => {
     const handleImageChange = (e: any) => {
         const file = e.target.files[0];
         if(file) {
-            updateImageFile(`${Date.now()}-${file.name}`)
-            setImage(file);
-    
+            setImage(file);   
             const reader = new FileReader();
             reader.onloadend = () => {
                 setPreview(reader.result as any);                    
@@ -38,7 +36,11 @@ const ImageUpload = () => {
             body: formData
         });
 
+
         if(res.ok) {
+            const data = await res.json();
+            console.log("data:::", data)
+            updateImageFile(data.newFileName)
             alert('Image uploaded successfully!');
         } else {
             alert('Image upload failed!');
