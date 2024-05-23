@@ -4,6 +4,16 @@ import * as z from "zod";
 import { db } from "@/lib/db";
 import { GameSchema } from "@/schemas";
 
+export const fetchGames = async() => {
+    try {
+        const games = await db.game.findMany();
+        return games;
+    } catch(e) {
+        console.log(e)
+        return null;
+    }
+};
+
 export const createGame = async(values: z.infer<typeof GameSchema>) => {
     const validateFields = GameSchema.safeParse(values);
     if(!validateFields.success) {
@@ -25,4 +35,5 @@ export const createGame = async(values: z.infer<typeof GameSchema>) => {
 
     return {success: "Game successfully created!"}
 };
+
 
