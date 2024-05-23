@@ -4,7 +4,7 @@ import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { GameSchema } from "@/schemas";
 import {useForm} from "react-hook-form";
-import { SetStateAction, useEffect, useState } from "react";
+import {  useEffect, useState, useRef } from "react";
 import { useImgStore } from "@/store/zustand";
 
 import { Button } from "@/components/ui/button";
@@ -43,13 +43,15 @@ import { DatePicker } from "@/components/custom/date-picker";
 import { validateProviderId, validateReleaseDate, validateTypeId } from "./games-utils";
 
 export function GamesForm() {
+  const [open, setOpen] = useState(false) 
+
   const [typeId, setTypeId] = useState('');
   const [error, setError] = useState('');
 
   const [providerId, setProviderId] = useState('');
   const [errorProvider, setErrorProvider] = useState(''); 
 
-  const [releaseDate, setReleaseDate] = useState<Date>();
+  const [releaseDate, setReleaseDate] = useState<Date | null>();
   const [errorRelDate, setErrorRelDate] = useState('');
  
   const form = useForm<z.infer<typeof GameSchema>>({
@@ -81,13 +83,13 @@ export function GamesForm() {
 
   const handleChangeProviderId = (value: string) => {
     setProviderId(value);
-    const validProviderMsg = validateProviderId(providerId);
+    const validProviderMsg = validateProviderId(value);
     setErrorProvider(validProviderMsg)
   };
 
   const handleChangeTypeId = (value: string) => {
     setTypeId(value);
-    const validTypeMsg = validateTypeId(typeId);
+    const validTypeMsg = validateTypeId(value);
     setError(validTypeMsg);
   };
 
@@ -95,8 +97,23 @@ export function GamesForm() {
     setReleaseDate(releaseDate);
   };
 
+
+    useEffect(() => {
+        console.log("open:::", open)
+        if(open === false) {
+            setProviderId('');
+            setReleaseDate(null);
+            setTypeId('');
+            setError('');
+            setErrorProvider('');
+            setErrorRelDate('');
+            form.setValue('name', '');
+        }
+
+    }, [open, form])
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">Add Game</Button>
       </DialogTrigger>
