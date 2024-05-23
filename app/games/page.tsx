@@ -1,5 +1,5 @@
 import { MainNav } from "@/components/main-nav";
-import {GamesForm} from "@/components/games/games-form"
+import {GamesForm} from "@/components/games/games-form";
 
 const GamesPage = () => {
   return (
@@ -19,7 +19,10 @@ const GamesPage = () => {
           <p>set form search here</p>
           <GamesForm />
         </div>
-        <div>set list table here</div>
+        <div>
+          <p>set list table here</p>         
+          
+        </div>
       </div>
     </>
     
