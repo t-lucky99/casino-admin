@@ -4,8 +4,9 @@ import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { GameSchema } from "@/schemas";
 import {useForm} from "react-hook-form";
-import {  useEffect, useState, useRef } from "react";
+import {  useEffect, useState, useTransition } from "react";
 import { useImgStore } from "@/store/zustand";
+import { createGame } from "@/actions/game";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -41,73 +42,94 @@ import {
 import { DatePicker } from "@/components/custom/date-picker";
 
 import { validateProviderId, validateReleaseDate, validateTypeId } from "./games-utils";
+import { FormSuccess } from "@/components/form-success";
+import { FormError } from "@/components/form-error";
 
 export function GamesForm() {
-  const [open, setOpen] = useState(false) 
+    // form state
+    const [open, setOpen] = useState(false) 
+    const [error, setError] = useState<string | undefined>("")
+    const [success, setSuccess] = useState<string | undefined>("")
+    const [isPending, startTransition] = useTransition();
 
-  const [typeId, setTypeId] = useState('');
-  const [error, setError] = useState('');
-
-  const [providerId, setProviderId] = useState('');
-  const [errorProvider, setErrorProvider] = useState(''); 
-
-  const [releaseDate, setReleaseDate] = useState<Date | null>();
-  const [errorRelDate, setErrorRelDate] = useState('');
+    // data fields state  
+    const [typeId, setTypeId] = useState("");
+    const [errorType, setErrorType] = useState("");
+    const [providerId, setProviderId] = useState("");
+    const [errorProvider, setErrorProvider] = useState(""); 
+    const [releaseDate, setReleaseDate] = useState<Date | null>();
+    const [errorRelDate, setErrorRelDate] = useState("");
  
-  const form = useForm<z.infer<typeof GameSchema>>({
-    resolver: zodResolver(GameSchema),
-    defaultValues: {
-        name: "",
-        image: "",
-        typeId: "1",
-        providerId: "1",
-        releaseDate: new Date(),
-        createDate: new Date(),
-        updateDate: new Date()
+    const form = useForm<z.infer<typeof GameSchema>>({
+        resolver: zodResolver(GameSchema),
+        defaultValues: {
+            name: "",
+            image: "",
+            typeId: "1",
+            providerId: "1",
+            releaseDate: new Date(),
+            createDate: new Date(),
+            updateDate: new Date()
+        }
+    })  
+
+    const onSubmit = (values: z.infer<typeof GameSchema>) => {
+        setError("");
+        setSuccess("");
+
+        //console.log("form vals:::",values)
+
+        const validTypeMsg = validateTypeId(typeId);
+        setErrorType(validTypeMsg);
+
+        const validProviderMsg = validateProviderId(providerId);
+        setErrorProvider(validProviderMsg);
+
+        const validDateMsg = validateReleaseDate(releaseDate as Date);
+        setErrorRelDate(validDateMsg);
+
+        if(validTypeMsg || validProviderMsg || validDateMsg) {
+            console.log("do not submit")
+        } else {
+            console.log("proceed to submit")
+            startTransition(() => {
+                createGame(values)
+                .then((data) => {
+                    setError(data.error);
+                    setSuccess(data.success);
+                })
+            });
+        }
     }
-  })  
 
-  const onSubmit = (values: z.infer<typeof GameSchema>) => {
-    console.log("test")
-    console.log("form vals:::",values)
+    const handleChangeProviderId = (value: string) => {
+        setProviderId(value);
+        form.setValue('providerId', value);
+        const validProviderMsg = validateProviderId(value);
+        setErrorProvider(validProviderMsg)
+    };
 
-    const validTypeMsg = validateTypeId(typeId);
-    setError(validTypeMsg);
+    const handleChangeTypeId = (value: string) => {
+        setTypeId(value);
+        form.setValue('typeId', value);
+        const validTypeMsg = validateTypeId(value);
+        setErrorType(validTypeMsg);
+    };
 
-    const validProviderMsg = validateProviderId(providerId);
-    setErrorProvider(validProviderMsg);
-
-    const validDateMsg = validateReleaseDate(releaseDate as Date);
-    setErrorRelDate(validDateMsg);
-  }
-
-  const handleChangeProviderId = (value: string) => {
-    setProviderId(value);
-    const validProviderMsg = validateProviderId(value);
-    setErrorProvider(validProviderMsg)
-  };
-
-  const handleChangeTypeId = (value: string) => {
-    setTypeId(value);
-    const validTypeMsg = validateTypeId(value);
-    setError(validTypeMsg);
-  };
-
-  const handleDateChange = (releaseDate: Date) => {
-    setReleaseDate(releaseDate);
-  };
-
+    const handleDateChange = (releaseDate: Date) => {
+        setReleaseDate(releaseDate);
+        form.setValue('releaseDate', releaseDate);
+    };
 
     useEffect(() => {
-        console.log("open:::", open)
         if(open === false) {
-            setProviderId('');
+            setProviderId("");
             setReleaseDate(null);
-            setTypeId('');
-            setError('');
-            setErrorProvider('');
-            setErrorRelDate('');
-            form.setValue('name', '');
+            setTypeId("");
+            setError("");
+            setErrorProvider("");
+            setErrorRelDate("");
+            form.reset();
         }
 
     }, [open, form])
@@ -154,7 +176,7 @@ export function GamesForm() {
                                 <FormItem>
                                     <FormLabel>Type</FormLabel>
                                     <FormControl>
-                                        <Select value={typeId} onValueChange={handleChangeTypeId}>
+                                        <Select onValueChange={handleChangeTypeId}>
                                             <SelectTrigger className="w-[180px]">
                                                 <SelectValue placeholder="Select game type" />
                                             </SelectTrigger>
@@ -169,7 +191,7 @@ export function GamesForm() {
                                             </SelectContent>
                                         </Select>
                                     </FormControl>
-                                    {error && <p style={{ color: 'red' }}>{error}</p>}
+                                    {errorType && <p style={{ color: 'red' }}>{errorType}</p>}
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -183,7 +205,7 @@ export function GamesForm() {
                                 <FormItem>
                                     <FormLabel>Provider</FormLabel>
                                     <FormControl>
-                                        <Select value={providerId} onValueChange={handleChangeProviderId}>
+                                        <Select onValueChange={handleChangeProviderId}>
                                             <SelectTrigger className="w-[180px]">
                                                 <SelectValue placeholder="Select provider" />
                                             </SelectTrigger>
@@ -218,6 +240,8 @@ export function GamesForm() {
                         )}
                     />
                 </div>
+                <FormError message={error} />
+                <FormSuccess message={success} />
 
                 <DialogFooter>
                     <Button type="submit">Save changes</Button>
