@@ -4,7 +4,7 @@ import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { GameSchema } from "@/schemas";
 import {useForm} from "react-hook-form";
-import { SetStateAction, useState } from "react";
+import { SetStateAction, useEffect, useState } from "react";
 import { useImgStore } from "@/store/zustand";
 
 import { Button } from "@/components/ui/button";
@@ -38,27 +38,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { DatePickerDemo } from "@/components/custom/date-picker";
-import { FaShieldAlt } from "react-icons/fa";
+import { DatePicker } from "@/components/custom/date-picker";
+
+import { validateProviderId, validateReleaseDate, validateTypeId } from "./games-utils";
 
 export function GamesForm() {
-  const TypeIdSchema = GameSchema.pick({
-    typeId: true,
-  });
-  const ReleaseDateSchema = GameSchema.pick({
-    releaseDate: true,
-  });
   const [typeId, setTypeId] = useState('');
-  const [error, setError] = useState(''); 
+  const [error, setError] = useState('');
+
+  const [providerId, setProviderId] = useState('');
+  const [errorProvider, setErrorProvider] = useState(''); 
 
   const [releaseDate, setReleaseDate] = useState<Date>();
   const [errorRelDate, setErrorRelDate] = useState('');
-
-  const handleDateChange = (releaseDate: Date) => {
-    setReleaseDate(releaseDate);
-    console.log("releaseDate::: ",releaseDate)
-  };
-  
+ 
   const form = useForm<z.infer<typeof GameSchema>>({
     resolver: zodResolver(GameSchema),
     defaultValues: {
@@ -72,42 +65,35 @@ export function GamesForm() {
     }
   })  
 
-
   const onSubmit = (values: z.infer<typeof GameSchema>) => {
     console.log("test")
-    console.log(values)
+    console.log("form vals:::",values)
 
-    validateTypeId(typeId);
+    const validTypeMsg = validateTypeId(typeId);
+    setError(validTypeMsg);
 
-    
-    const validationResult = ReleaseDateSchema.safeParse({ releaseDate });
-    if (!validationResult.success) {
-        setErrorRelDate(validationResult.error.issues[0].message);
-    } else {
-        setErrorRelDate('');
-    }   
+    const validProviderMsg = validateProviderId(providerId);
+    setErrorProvider(validProviderMsg);
+
+    const validDateMsg = validateReleaseDate(releaseDate as Date);
+    setErrorRelDate(validDateMsg);
   }
 
+  const handleChangeProviderId = (value: string) => {
+    setProviderId(value);
+    const validProviderMsg = validateProviderId(providerId);
+    setErrorProvider(validProviderMsg)
+  };
+
   const handleChangeTypeId = (value: string) => {
-
     setTypeId(value);
-    console.log("value:::", value)
-
-    // Validate the selected option
-    validateTypeId(value);
-
+    const validTypeMsg = validateTypeId(typeId);
+    setError(validTypeMsg);
   };
 
-  const validateTypeId = (id: string) => {
-    const validationResult = TypeIdSchema.safeParse({ typeId: id });
-
-    if (!validationResult.success) {
-        setError(validationResult.error.issues[0].message);
-    } else {
-        setError('');
-    }    
+  const handleDateChange = (releaseDate: Date) => {
+    setReleaseDate(releaseDate);
   };
-
 
   return (
     <Dialog>
@@ -180,7 +166,7 @@ export function GamesForm() {
                                 <FormItem>
                                     <FormLabel>Provider</FormLabel>
                                     <FormControl>
-                                        <Select>
+                                        <Select value={providerId} onValueChange={handleChangeProviderId}>
                                             <SelectTrigger className="w-[180px]">
                                                 <SelectValue placeholder="Select provider" />
                                             </SelectTrigger>
@@ -195,6 +181,7 @@ export function GamesForm() {
                                             </SelectContent>
                                         </Select>
                                     </FormControl>
+                                    {errorProvider && <p style={{ color: 'red' }}>{errorProvider}</p>}
                                 </FormItem>
                             )}
                         />
@@ -207,9 +194,9 @@ export function GamesForm() {
                             <FormItem>
                                 <FormLabel>Date of Release</FormLabel>
                                 <FormControl>
-					                <DatePickerDemo handleDateChange={handleDateChange} />
+					                <DatePicker handleDateChange={handleDateChange} />
                                 </FormControl>
-                                {error && <p style={{ color: 'red' }}>{errorRelDate}</p>}                                    
+                                {errorRelDate && <p style={{ color: 'red' }}>{errorRelDate}</p>}                                    
                             </FormItem>
                         )}
                     />
