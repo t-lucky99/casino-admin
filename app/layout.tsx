@@ -3,6 +3,7 @@ import { Poppins, Noto_Sans } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/page-header";
 import { MainNav } from "@/components/main-nav";
+import { Toaster } from "@/components/ui/toaster";
 
 const font = Poppins({
   subsets: ['latin'],
@@ -33,7 +34,7 @@ export default function RootLayout({
           {children}
         </div>
       </div>
-
+      <Toaster />  
       </body>
     </html>
   );

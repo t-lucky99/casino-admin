@@ -22,4 +22,23 @@ model Game {
   releaseDate   DateTime
   createDate    DateTime
   updateDate    DateTime
+
+  type      Type      @relation(fields: [typeId], references: [id])
+  provider  Provider  @relation(fields: [providerId], references: [id])
+
+  @@map("game") // This maps the model to the "game" table in your PostgreSQL database 
+}
+
+model Type {
+  id    Int    @id @default(autoincrement())
+  name  String
+  game Game[]
+
+  @@map("type") // This maps the model to the "type" table in your PostgreSQL database
+}
+
+model Provider {
+  id    Int    @id @default(autoincrement())
+  name  String
+  games   Game[]
 }

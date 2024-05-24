@@ -5,6 +5,8 @@ import {GamesForm} from "@/components/games/games-form";
 import { fetchGames } from "@/actions/game";
 import { useEffect, useState, useTransition } from "react";
 import { Game } from "@prisma/client";
+import { DataTable } from "@/components/custom-table/data-table";
+import {columns} from "./columns";
 
 
 
@@ -44,15 +46,13 @@ const GamesPage = () => {
           <div>set list table here</div>
         </div>
       </div> */}
-      <div>
-        <div>
-          <p>set form search here</p>
+      <div className="container mx-auto py-0">
+        <div className="py-5">
           <GamesForm />
         </div>
-        <div>
-          <p>set list table here</p>
+        <div className="py-5">
           <div>
-            {list}
+            <DataTable columns={columns} data={games} />
           </div>
           
         </div>

@@ -6,9 +6,10 @@ import { GameSchema } from "@/schemas";
 import {useForm} from "react-hook-form";
 import {  useEffect, useState, useTransition } from "react";
 import { useImgStore } from "@/store/zustand";
-import { createGame } from "@/actions/game";
+import { createGame, fetchTypes, fetchProviders } from "@/actions/game";
 
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -38,14 +39,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
 
 import { DatePicker } from "@/components/custom/date-picker";
-
 import { validateProviderId, validateReleaseDate, validateTypeId } from "./games-utils";
 import { FormSuccess } from "@/components/form-success";
 import { FormError } from "@/components/form-error";
+import { Type } from "@prisma/client";
+import { cn } from "@/lib/utils";
 
 export function GamesForm() {
+    const { toast } = useToast();
+
     // form state
     const [open, setOpen] = useState(false) 
     const [error, setError] = useState<string | undefined>("")
@@ -53,7 +58,9 @@ export function GamesForm() {
     const [isPending, startTransition] = useTransition();
 
     // data fields state  
+    const [types, setTypes] = useState<Type[] | null>(null);
     const [typeId, setTypeId] = useState("");
+    const [providers, setProviders] = useState<Type[] | null>(null);
     const [errorType, setErrorType] = useState("");
     const [providerId, setProviderId] = useState("");
     const [errorProvider, setErrorProvider] = useState(""); 
@@ -97,6 +104,11 @@ export function GamesForm() {
                 .then((data) => {
                     setError(data.error);
                     setSuccess(data.success);
+                    toast({
+                        description: (data.success || data.error),
+                        className: cn('top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4')
+                      })
+                      setOpen(false)
                 })
             });
         }
@@ -131,123 +143,150 @@ export function GamesForm() {
             setErrorRelDate("");
             form.reset();
         }
+    }, [open, form]);
 
-    }, [open, form])
+
+    useEffect(() => {
+        startTransition(() => {
+            fetchTypes()
+            .then((data) => {
+                setTypes(data)
+            })
+
+            fetchProviders()
+            .then((data) => {
+                setProviders(data)
+            })
+        });
+    },[]);    
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">Add Game</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-full h-full md:h-auto md:max-w-[680px] overflow-auto">
         <DialogHeader>
           <DialogTitle>Add Game</DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
-            {/* <ImageUpload /> */}
-            <form 
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-6"
-            >
-                <div className="space-y-4">
-                    <FormField 
-                        control={form.control}
-                        name="name"
-                        render={({field}) => (
-                            <FormItem>
-                                <FormLabel>Name</FormLabel>
-                                <FormControl>
-                                    <Input 
-                                        {...field} 
-                                        placeholder="Game Name"
-                                    />
-                                </FormControl>
-                                <FormMessage />                                    
-                            </FormItem>
-                        )}
-                    />
-                   
-                    <div className="grid grid-cols-2 gap-4">
-                        <FormField 
-                            control={form.control}
-                            name="typeId"
-                            render={({field}) => (
-                                <FormItem>
-                                    <FormLabel>Type</FormLabel>
-                                    <FormControl>
-                                        <Select onValueChange={handleChangeTypeId}>
-                                            <SelectTrigger className="w-[180px]">
-                                                <SelectValue placeholder="Select game type" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                <SelectItem value="1">Slot</SelectItem>
-                                                <SelectItem value="2">Poker</SelectItem>
-                                                <SelectItem value="3">Roulette</SelectItem>
-                                                <SelectItem value="4">Blackjack</SelectItem>
-                                                <SelectItem value="5">Baccarat</SelectItem>
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                    </FormControl>
-                                    {errorType && <p style={{ color: 'red' }}>{errorType}</p>}
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+        <div className="flex flex-col md:flex-row md:gap-5">
+            <div className="w-[230px]">
+                <ImageUpload />
+            </div>
+            <Separator className="hidden md:visible" orientation="vertical" />      
+            <div>
+                <Form {...form}>
+                    <form 
+                        onSubmit={form.handleSubmit(onSubmit)}
+                        className="space-y-6"
+                    >
+                        <div className="space-y-4">
+                            <FormField 
+                                control={form.control}
+                                name="name"
+                                render={({field}) => (
+                                    <FormItem>
+                                        <FormLabel>Name</FormLabel>
+                                        <FormControl>
+                                            <Input 
+                                                {...field} 
+                                                placeholder="Game Name"
+                                            />
+                                        </FormControl>
+                                        <FormMessage />                                    
+                                    </FormItem>
+                                )}
+                            />
+                        
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField 
+                                    control={form.control}
+                                    name="typeId"
+                                    render={({field}) => (
+                                        <FormItem>
+                                            <FormLabel>Type</FormLabel>
+                                            <FormControl>
+                                                <Select onValueChange={handleChangeTypeId}>
+                                                    <SelectTrigger className="w-[180px]">
+                                                        <SelectValue placeholder="Select game type" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectGroup>
+                                                            {types?.map((item) => {
+                                                                return (
+                                                                <SelectItem key={item.id} value={`${item.id}`}>
+                                                                    {item.name[0].toUpperCase()+item.name.slice(1)}
+                                                                </SelectItem>
+                                                                )
+                                                            })}                                               
+                                                        </SelectGroup>
+                                                    </SelectContent>
+                                                </Select>
+                                            </FormControl>
+                                            {errorType && <p style={{ color: 'red' }}>{errorType}</p>}
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
 
-                        <FormField 
-                            control={form.control}
-                            name="providerId"
-                            render={({field}) => (
-                                <FormItem>
-                                    <FormLabel>Provider</FormLabel>
-                                    <FormControl>
-                                        <Select onValueChange={handleChangeProviderId}>
-                                            <SelectTrigger className="w-[180px]">
-                                                <SelectValue placeholder="Select provider" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                <SelectItem value="1">Pragmatic Play</SelectItem>
-                                                <SelectItem value="2">Evo Play</SelectItem>
-                                                <SelectItem value="3">Play N Go</SelectItem>
-                                                <SelectItem value="4">Golden Hero</SelectItem>
-                                                <SelectItem value="5">Playson</SelectItem>
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                    </FormControl>
-                                    {errorProvider && <p style={{ color: 'red' }}>{errorProvider}</p>}
-                                </FormItem>
-                            )}
-                        />
-                    </div>
+                                <FormField 
+                                    control={form.control}
+                                    name="providerId"
+                                    render={({field}) => (
+                                        <FormItem>
+                                            <FormLabel>Provider</FormLabel>
+                                            <FormControl>
+                                                <Select onValueChange={handleChangeProviderId}>
+                                                    <SelectTrigger className="w-[180px]">
+                                                        <SelectValue placeholder="Select provider" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectGroup>
+                                                            {providers?.map((item) => {
+                                                                return (
+                                                                <SelectItem key={item.id} value={`${item.id}`}>
+                                                                    {item.name[0].toUpperCase()+item.name.slice(1)}
+                                                                </SelectItem>
+                                                                )
+                                                            })} 
+                                                        </SelectGroup>
+                                                    </SelectContent>
+                                                </Select>
+                                            </FormControl>
+                                            {errorProvider && <p style={{ color: 'red' }}>{errorProvider}</p>}
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
 
-                    <FormField 
-                        control={form.control}
-                        name="releaseDate"
-                        render={({field}) => (
-                            <FormItem>
-                                <FormLabel>Date of Release</FormLabel>
-                                <FormControl>
-					                <DatePicker handleDateChange={handleDateChange} />
-                                </FormControl>
-                                {errorRelDate && <p style={{ color: 'red' }}>{errorRelDate}</p>}                                    
-                            </FormItem>
-                        )}
-                    />
-                </div>
-                <FormError message={error} />
-                <FormSuccess message={success} />
+                            <FormField 
+                                control={form.control}
+                                name="releaseDate"
+                                render={({field}) => (
+                                    <FormItem>
+                                        <FormLabel>Date of Release</FormLabel>
+                                        <FormControl>
+                                            <DatePicker handleDateChange={handleDateChange} />
+                                        </FormControl>
+                                        {errorRelDate && <p style={{ color: 'red' }}>{errorRelDate}</p>}                                    
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                        <FormError message={error} />
+                        <FormSuccess message={success} />
 
-                <DialogFooter>
-                    <Button type="submit">Save changes</Button>
-                </DialogFooter>
-            </form>
-        </Form>
+                        <DialogFooter>
+                            <Button type="submit">Save changes</Button>
+                        </DialogFooter>
+                    </form>
+                </Form>
+            </div>
+        </div>
+
+
 
       </DialogContent>
     </Dialog>
