@@ -48,11 +48,19 @@ import { FormError } from "@/components/form-error";
 import { Type } from "@prisma/client";
 import { cn } from "@/lib/utils";
 
-export function GamesForm() {
+interface AddGameDialogProps {
+    onGameAdded: () => void;
+    open: boolean,
+    setOpen: (arg0: boolean) => void,
+    game: object
+  }
+
+export function GamesForm(props: AddGameDialogProps) {
+    const { imageFile } = useImgStore();
     const { toast } = useToast();
 
     // form state
-    const [open, setOpen] = useState(false) 
+    //const [open, setOpen] = useState(false) 
     const [error, setError] = useState<string | undefined>("")
     const [success, setSuccess] = useState<string | undefined>("")
     const [isPending, startTransition] = useTransition();
@@ -84,8 +92,9 @@ export function GamesForm() {
         setError("");
         setSuccess("");
 
-        //console.log("form vals:::",values)
-
+        if(imageFile) {
+            values.image = imageFile
+        }
         const validTypeMsg = validateTypeId(typeId);
         setErrorType(validTypeMsg);
 
@@ -104,11 +113,14 @@ export function GamesForm() {
                 .then((data) => {
                     setError(data.error);
                     setSuccess(data.success);
+                    if(data.success) {
+                        props.onGameAdded();
+                    }
                     toast({
                         description: (data.success || data.error),
                         className: cn('top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4')
                       })
-                      setOpen(false)
+                      props.setOpen(false)
                 })
             });
         }
@@ -134,7 +146,7 @@ export function GamesForm() {
     };
 
     useEffect(() => {
-        if(open === false) {
+        if(props.open === false) {
             setProviderId("");
             setReleaseDate(null);
             setTypeId("");
@@ -143,7 +155,7 @@ export function GamesForm() {
             setErrorRelDate("");
             form.reset();
         }
-    }, [open, form]);
+    }, [props.open, form]);
 
 
     useEffect(() => {
@@ -160,8 +172,14 @@ export function GamesForm() {
         });
     },[]);    
 
+    useEffect(() => {
+        console.log("test999:::",props.game)
+    },[props.game]);  
+
+    
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={props.open} onOpenChange={props.setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">Add Game</Button>
       </DialogTrigger>
@@ -275,8 +293,8 @@ export function GamesForm() {
                                 )}
                             />
                         </div>
-                        <FormError message={error} />
-                        <FormSuccess message={success} />
+                        {/* <FormError message={error} />
+                        <FormSuccess message={success} /> */}
 
                         <DialogFooter>
                             <Button type="submit">Save changes</Button>

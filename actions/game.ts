@@ -62,11 +62,12 @@ export const createGame = async(values: z.infer<typeof GameSchema>) => {
         return {error: "Invalid fields"}
     }
 
-    const {name, typeId, providerId, releaseDate } = validateFields.data;
+    const {name, typeId, providerId, releaseDate, image } = validateFields.data;
 
     await db.game.create({
         data: {
             name,
+            image,
             typeId: parseInt(typeId),
             providerId: parseInt(providerId),
             releaseDate,

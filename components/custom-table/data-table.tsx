@@ -27,16 +27,19 @@ import { Input } from "@/components/ui/input"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
-  data: TData[]
+  data: TData[],
+  customFunction: (arg0: any) => void | undefined,
+  setOpen: (arg0: boolean) => void
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  customFunction,
+  setOpen
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-
 
   const table = useReactTable({
     data,
@@ -53,6 +56,10 @@ export function DataTable<TData, TValue>({
       columnFilters,
     }
   })
+
+  const handleActionClick = (row: TData) => {
+    customFunction(row);
+  }
 
   return (
     <div>
@@ -95,7 +102,15 @@ export function DataTable<TData, TValue>({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} onClick={(e) => {
+                      const el = e.target as HTMLElement
+                      if(el.innerText === "Edit") {
+                        handleActionClick(row.original);
+                        setOpen(true)
+                      } else {
+                        handleActionClick({} as TData)
+                      }
+                    }}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}

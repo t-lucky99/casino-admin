@@ -32,6 +32,7 @@ model Game {
 model Type {
   id    Int    @id @default(autoincrement())
   name  String
+  description String?
   game Game[]
 
   @@map("type") // This maps the model to the "type" table in your PostgreSQL database
@@ -40,5 +41,6 @@ model Type {
 model Provider {
   id    Int    @id @default(autoincrement())
   name  String
+  description String?
   games   Game[]
 }

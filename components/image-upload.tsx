@@ -39,8 +39,7 @@ const ImageUpload = () => {
 
         if(res.ok) {
             const data = await res.json();
-            console.log("data:::", data)
-            updateImageFile(data.newFileName)
+            updateImageFile(data.newFileName);
             alert('Image uploaded successfully!');
         } else {
             alert('Image upload failed!');
